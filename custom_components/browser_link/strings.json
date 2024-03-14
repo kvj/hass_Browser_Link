@@ -1,0 +1,34 @@
+{
+  "title": "Browser Link",
+  "config": {
+    "step": {
+      "user": {
+        "title": "New Browser Link configuration",
+        "data": {
+          "name": "Name",
+          "browser_id": "Browser ID"
+        }
+      }
+    },
+    "error": {
+    }
+  },
+  "issues": {
+    "new_browser_id": {
+      "title": "New Browser Link ID",
+      "description": "Create or update Browser Link configuration\n  * Browser ID: `{browser_id}`\n  * User: `{user}`"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Browser Link configuration",
+        "data": {
+          "browser_id": "Browser ID"
+        }
+      }
+    },
+    "error": {
+    }
+  }
+}

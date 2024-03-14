@@ -1,0 +1,13 @@
+{
+  "domain": "browser_link",
+  "name": "Browser Link",
+  "documentation": "https://github.com/kvj/hass_Browser_Link",
+  "issue_tracker": "https://github.com/kvj/hass_Browser_Link/issues",
+  "after_dependencies": [],
+  "dependencies": ["websocket_api", "frontend"],
+  "codeowners": ["@kvj"],
+  "requirements": [],
+  "iot_class": "local_push",
+  "config_flow": true,
+  "version": "0.1.0"
+}

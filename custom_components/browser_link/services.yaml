@@ -1,0 +1,12 @@
+more_info:
+  name: Show more info dialog 
+  target:
+    device:
+      integration: browser_link
+  fields:
+    entity:
+      name: Entity to show dialog for
+      required: false
+      selector:
+        entity:
+          multiple: false
