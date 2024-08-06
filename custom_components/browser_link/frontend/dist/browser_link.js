@@ -1,6 +1,17 @@
 
 (function() {
-    console.log(`Browser Link JS has been loaded`);
+
+    const indicatorDiv = document.createElement("div");
+    indicatorDiv.style.zIndex = 20000;
+    indicatorDiv.style.position = "fixed";
+    indicatorDiv.style.width = "5px";
+    indicatorDiv.style.height = "5px";
+    indicatorDiv.style.backgroundColor = "grey";
+    indicatorDiv.style.right = 0;
+    indicatorDiv.style.top = 0;
+    document.body.appendChild(indicatorDiv);
+
+    console.log(`Browser Link JS has been loaded...`);
     const LS_BROSWER_ID_KEY = "__browser_link_browser_id";
 
     const getBrowserID = () => {
@@ -28,6 +39,7 @@
             return;    
         }
     }
+    indicatorDiv.style.backgroundColor = "red";
 
     const debounce = (id, msec, cb) => {
         if (id) clearTimeout(id);
@@ -55,7 +67,10 @@
     
     console.log(`Browser ID:`, browser_id);
 
-    hassConnection.then(async (hass) => {
+    const onHassLoad = async (hass) => {
+
+        console.log(`Hass loaded:`, hass);
+        indicatorDiv.style.backgroundColor = "yellow";
 
         document.addEventListener("visibilitychange", () => {
             reportVisibility(hass);
@@ -74,14 +89,15 @@
             });
         });
             
-        console.log(`Hass loaded:`, hass);
-
         const entities = await hass.conn.sendMessagePromise({
             type: "browser_link/get_entities",
             browser_id,
         });
         
         console.log(`Entites:`, entities);
+        if (Object.keys(entities).length > 0) {
+            indicatorDiv.style.backgroundColor = "lime";
+        }
 
         const sendHAEvent = (name, detail) => {
             const evt = new CustomEvent(name, {
@@ -186,6 +202,10 @@
         //     duration: 5000,
         //     dismissable: true,
         // });
-    });
+    };
+
+    setTimeout(() => {
+        hassConnection.then(onHassLoad);
+    }, 0);
         
 })();

@@ -14,7 +14,7 @@ from homeassistant.helpers import service
 from homeassistant.loader import async_get_integration
 
 from aiohttp.web import json_response
-from homeassistant.components import webhook, frontend, websocket_api
+from homeassistant.components import webhook, frontend, websocket_api, http
 
 from homeassistant.helpers import issue_registry as ir
 
@@ -33,8 +33,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def _async_update_entry(hass, entry):
     _LOGGER.debug(f"_async_update_entry: {entry}")
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)
+    coordinator = hass.data[DOMAIN]["devices"][entry.entry_id]
+    await coordinator.async_unload()
+    await coordinator.async_load()
 
 async def async_setup_entry(hass: HomeAssistant, entry):
     data = entry.as_dict()["options"]
@@ -46,18 +47,14 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     await coordinator.async_config_entry_first_refresh()
     await coordinator.async_load()
 
-    for p in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, p)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 async def async_unload_entry(hass: HomeAssistant, entry):
     data = entry.as_dict()["options"]
 
     coordinator = hass.data[DOMAIN]["devices"][entry.entry_id]
-    for p in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, p)
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await coordinator.async_unload()
     hass.data[DOMAIN]["devices"].pop(entry.entry_id)
     return True
@@ -69,14 +66,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     platform = Platform(hass)
     await platform.async_load()
     hass.data[DOMAIN] = {"devices": {}, "platform": platform}
-    hass.http.register_static_path(
-        FE_SCRIPT_URI,
-        "{}/dist/browser_link.js".format(locate_dir()),
-        cache_headers=False,
-    )
-    frontend.add_extra_js_url(hass, "{}?ver={}".format(FE_SCRIPT_URI, ver))
+    await hass.http.async_register_static_paths([
+        http.StaticPathConfig(FE_SCRIPT_URI, "{}/dist/browser_link.js".format(locate_dir()), False),
+    ])
     for fn in (_ws_update_uri, _ws_get_entities, _ws_media_player_state, _ws_update_visibility):
-        hass.components.websocket_api.async_register_command(fn)
+        websocket_api.async_register_command(hass, fn)
+    frontend.add_extra_js_url(hass, "{}?ver={}".format(FE_SCRIPT_URI, ver))
 
     async def async_more_info(call):
         for entry_id in await service.async_extract_config_entry_ids(hass, call):
